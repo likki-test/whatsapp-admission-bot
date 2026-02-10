@@ -7,6 +7,12 @@ const addRowToSheet = require("./sheets");
 const app = express();
 app.use(express.json());
 
+/* ===== HEALTH CHECK ROUTE ===== */
+app.get("/", (req, res) => {
+  res.send("Bot is running 🚀");
+});
+
+
 /* ===== CONFIG ===== */
 
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
