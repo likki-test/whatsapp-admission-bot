@@ -12,27 +12,22 @@ app.get("/", (req, res) => {
   res.send("Bot is running 🚀");
 });
 
-
 /* ===== CONFIG ===== */
-
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const VERIFY_TOKEN = "admission_verify_token";
 
 /* ===== BASIC CHECK ===== */
-
 if (!ACCESS_TOKEN || !PHONE_NUMBER_ID) {
-  console.log("❌ ACCESS_TOKEN or PHONE_NUMBER_ID missing in .env file");
+  console.log("❌ ACCESS_TOKEN or PHONE_NUMBER_ID missing in environment variables");
   process.exit(1);
 }
 
 /* ===== USER SESSION STORAGE ===== */
-
 let userState = {};
 let userData = {};
 
 /* ===== SEND WHATSAPP MESSAGE ===== */
-
 async function sendMessage(phone, text) {
   try {
     await axios.post(
@@ -57,7 +52,6 @@ async function sendMessage(phone, text) {
 }
 
 /* ===== WEBHOOK VERIFICATION ===== */
-
 app.get("/webhook", (req, res) => {
   if (
     req.query["hub.mode"] === "subscribe" &&
@@ -70,7 +64,6 @@ app.get("/webhook", (req, res) => {
 });
 
 /* ===== RECEIVE MESSAGE ===== */
-
 app.post("/webhook", async (req, res) => {
   try {
     const message =
@@ -83,8 +76,20 @@ app.post("/webhook", async (req, res) => {
 
     if (!text) return res.sendStatus(200);
 
-    /* ===== START FLOW ===== */
+    /* ===== RESET FLOW ===== */
+    if (["hi", "start", "restart"].includes(text.toLowerCase())) {
+      userState[phone] = "NAME";
+      userData[phone] = { phone };
 
+      await sendMessage(
+        phone,
+        "👋 Welcome to ABC College Admissions!\nPlease enter your *full name*."
+      );
+
+      return res.sendStatus(200);
+    }
+
+    /* ===== START FLOW IF NEW USER ===== */
     if (!userState[phone]) {
       userState[phone] = "NAME";
       userData[phone] = { phone };
@@ -100,7 +105,6 @@ app.post("/webhook", async (req, res) => {
     let state = userState[phone];
 
     /* ===== NAME STEP ===== */
-
     if (state === "NAME") {
       userData[phone].name = text;
       userState[phone] = "COURSE";
@@ -112,7 +116,6 @@ app.post("/webhook", async (req, res) => {
     }
 
     /* ===== COURSE STEP ===== */
-
     else if (state === "COURSE") {
       userData[phone].course = text;
       userState[phone] = "EMAIL";
@@ -124,7 +127,6 @@ app.post("/webhook", async (req, res) => {
     }
 
     /* ===== EMAIL STEP ===== */
-
     else if (state === "EMAIL") {
 
       if (!text.includes("@")) {
@@ -138,7 +140,6 @@ app.post("/webhook", async (req, res) => {
       userData[phone].email = text;
 
       /* ===== SAVE TO GOOGLE SHEETS ===== */
-
       await addRowToSheet({
         name: userData[phone].name,
         phone: userData[phone].phone,
@@ -165,7 +166,6 @@ app.post("/webhook", async (req, res) => {
 });
 
 /* ===== START SERVER ===== */
-
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
