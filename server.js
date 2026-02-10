@@ -96,7 +96,7 @@ app.post("/webhook", async (req, res) => {
 
       await sendMessage(
         phone,
-        "👋 Welcome to ABC College Admissions!\nPlease enter your *full name*."
+        "👋 Welcome to Course Admissions!\nif you want to restart the convo type *restart*.\nPlease enter your *full name*."
       );
 
       return res.sendStatus(200);
